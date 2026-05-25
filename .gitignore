@@ -1,0 +1,13 @@
+# environment variables — NEVER commit this
+.env
+
+# Go build output
+*.exe
+*.exe~
+
+# Go dependency cache
+vendor/
+
+# IDE files
+.vscode/
+.idea/

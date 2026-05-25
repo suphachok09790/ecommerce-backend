@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_ecommerce
+    environment:
+      POSTGRES_DB: ecommerce        # database name — matches DB_NAME in .env
+      POSTGRES_USER: postgres       # matches DB_USER in .env
+      POSTGRES_PASSWORD: password123  # matches DB_PASSWORD in .env
+    volumes:
+      - postgres_ecommerce_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"                 # localhost:5432 → container:5432
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_ecommerce
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"                   # open pgAdmin at http://localhost:5050
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_ecommerce_data:
