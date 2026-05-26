@@ -42,6 +42,11 @@ func main() {
 	productService := service.NewProductService(productRepo)
 	productHandler := handler.NewProductHandler(productService)
 
+	// cart
+	cartRepo := repository.NewCartRepository(config.DB)
+	cartService := service.NewCartService(cartRepo, productRepo)
+	cartHandler := handler.NewCartHandler(cartService)
+
 	// create fiber app
 	app := fiber.New()
 
@@ -54,6 +59,13 @@ func main() {
 	public := app.Group("/api")
 	public.Get("/products", productHandler.GetAll)
 	public.Get("/products/:id", productHandler.GetByID)
+
+	// protected routes — login required
+	api := app.Group("/api", middleware.RequireAuth)
+	api.Get("/cart", cartHandler.GetCart)
+	api.Post("/cart", cartHandler.AddItem)
+	api.Put("/cart/:product_id", cartHandler.UpdateQuantity)
+	api.Delete("/cart/:product_id", cartHandler.RemoveItem)
 
 	// admin routes — RequireAuth + RequireAdmin both must pass
 	admin := app.Group("/api/admin", middleware.RequireAuth, middleware.RequireAdmin)
