@@ -6,6 +6,7 @@ import (
 	"ecommerce/internal/model"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/service"
+	"ecommerce/internal/middleware"
 	
 	
 	"log"
@@ -31,10 +32,15 @@ func main() {
 		&model.OrderItem{},
 	)
 
-	// wire layers: repository → service → handler
+	// wire auth layers: repository → service → handler
 	userRepo := repository.NewUserRepository(config.DB)
 	authService := service.NewAuthService(userRepo)
 	authHandler := handler.NewAuthHandler(authService)
+
+	// wire products
+	productRepo := repository.NewProductRepository(config.DB)
+	productService := service.NewProductService(productRepo)
+	productHandler := handler.NewProductHandler(productService)
 
 	// create fiber app
 	app := fiber.New()
@@ -43,6 +49,17 @@ func main() {
 	auth := app.Group("/api/auth")
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+
+	// product routes — public read
+	public := app.Group("/api")
+	public.Get("/products", productHandler.GetAll)
+	public.Get("/products/:id", productHandler.GetByID)
+
+	// admin routes — RequireAuth + RequireAdmin both must pass
+	admin := app.Group("/api/admin", middleware.RequireAuth, middleware.RequireAdmin)
+	admin.Post("/products",       productHandler.Create)
+	admin.Put("/products/:id",    productHandler.Update)
+	admin.Delete("/products/:id", productHandler.Delete)
 
 	// start server
 	log.Println("Server running on http://localhost:3000")
