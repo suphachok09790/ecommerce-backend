@@ -47,6 +47,11 @@ func main() {
 	cartService := service.NewCartService(cartRepo, productRepo)
 	cartHandler := handler.NewCartHandler(cartService)
 
+	// orders
+	orderRepo := repository.NewOrderRepository(config.DB)
+	orderService := service.NewOrderService(config.DB, orderRepo, cartRepo, productRepo)
+	orderHandler := handler.NewOrderHandler(orderService)
+
 	// create fiber app
 	app := fiber.New()
 
@@ -66,6 +71,8 @@ func main() {
 	api.Post("/cart", cartHandler.AddItem)
 	api.Put("/cart/:product_id", cartHandler.UpdateQuantity)
 	api.Delete("/cart/:product_id", cartHandler.RemoveItem)
+	api.Post("/orders", orderHandler.CreateOrder)
+	api.Get("/orders", orderHandler.GetOrders)
 
 	// admin routes — RequireAuth + RequireAdmin both must pass
 	admin := app.Group("/api/admin", middleware.RequireAuth, middleware.RequireAdmin)
